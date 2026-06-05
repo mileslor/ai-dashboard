@@ -9,6 +9,8 @@ export const translations = {
       team: "AI 團隊",
       messages: "訊息",
       settings: "設定",
+      automation: "自動化",
+      decisions: "決策中心",
     },
     workspace: "本地工作區",
     notes: {
@@ -72,6 +74,8 @@ export const translations = {
       team: "AI Team",
       messages: "Messages",
       settings: "Settings",
+      automation: "Automation",
+      decisions: "Decisions",
     },
     workspace: "Local workspace",
     notes: {
