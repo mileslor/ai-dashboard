@@ -8,20 +8,24 @@ interface ProjectStatus { title: string; icon: string; status: string; detail: s
 interface StateData { lastUpdated: string; activeNow: string[]; projects: ProjectStatus[]; pending: string[]; decisions: string[] }
 
 const tiles = [
-  { href: "/team",     emoji: "🤖", name: "AI 團隊",  color: "violet" },
-  { href: "/projects", emoji: "📁", name: "項目",      color: "emerald" },
-  { href: "/activity", emoji: "⚡", name: "活動記錄",  color: "amber" },
-  { href: "/sessions", emoji: "🗂️", name: "Sessions",  color: "violet" },
-  { href: "/messages", emoji: "💬", name: "訊息",      color: "violet" },
-  { href: "/notes",    emoji: "📝", name: "筆記",      color: "blue" },
-  { href: "/tokens",   emoji: "🔋", name: "Token",     color: "cyan" },
-  { href: "/settings", emoji: "⚙️", name: "設定",      color: "slate" },
+  { href: "/team",       emoji: "🤖", name: "AI 團隊",  color: "violet" },
+  { href: "/projects",   emoji: "📁", name: "項目",      color: "emerald" },
+  { href: "/automation", emoji: "⚙️", name: "自動化",    color: "orange" },
+  { href: "/decisions",  emoji: "🎯", name: "決策中心",  color: "red" },
+  { href: "/activity",   emoji: "⚡", name: "活動記錄",  color: "amber" },
+  { href: "/sessions",   emoji: "🗂️", name: "Sessions",  color: "violet" },
+  { href: "/messages",   emoji: "💬", name: "訊息",      color: "violet" },
+  { href: "/notes",      emoji: "📝", name: "筆記",      color: "blue" },
+  { href: "/tokens",     emoji: "🔋", name: "Token",     color: "cyan" },
+  { href: "/settings",   emoji: "⚙️", name: "設定",      color: "slate" },
 ];
 
 const tileColors: Record<string, string> = {
   violet:  "hover:bg-violet-500/15 hover:border-violet-500/30 hover:text-violet-200",
   emerald: "hover:bg-emerald-500/15 hover:border-emerald-500/30 hover:text-emerald-200",
   amber:   "hover:bg-amber-500/15 hover:border-amber-500/30 hover:text-amber-200",
+  orange:  "hover:bg-orange-500/15 hover:border-orange-500/30 hover:text-orange-200",
+  red:     "hover:bg-red-500/15 hover:border-red-500/30 hover:text-red-200",
   blue:    "hover:bg-blue-500/15 hover:border-blue-500/30 hover:text-blue-200",
   cyan:    "hover:bg-cyan-500/15 hover:border-cyan-500/30 hover:text-cyan-200",
   slate:   "hover:bg-slate-500/15 hover:border-slate-500/30 hover:text-slate-200",
@@ -38,6 +42,7 @@ const statusStyle: Record<string, string> = {
 export default function HubPage() {
   const [state, setState] = useState<StateData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [decisionCount, setDecisionCount] = useState(0);
   const [error, setError] = useState(false);
   const [pendingInput, setPendingInput] = useState("");
   const [showPendingAdd, setShowPendingAdd] = useState(false);
@@ -46,9 +51,16 @@ export default function HubPage() {
   const load = useCallback(async () => {
     setLoading(true); setError(false);
     try {
-      const res = await fetch("/api/current-state");
-      if (res.ok) setState(await res.json());
+      const [stateRes, decisionsRes] = await Promise.all([
+        fetch("/api/current-state"),
+        fetch("/api/decisions"),
+      ]);
+      if (stateRes.ok) setState(await stateRes.json());
       else setError(true);
+      if (decisionsRes.ok) {
+        const d = await decisionsRes.json();
+        setDecisionCount((d.items ?? []).filter((i: { severity: string }) => i.severity !== "low").length);
+      }
     } catch { setError(true); }
     setLoading(false);
   }, []);
@@ -215,6 +227,11 @@ export default function HubPage() {
                 <div className={`rounded-lg border border-white/8 bg-white/3 px-3 py-2 flex items-center gap-2 text-slate-500 text-sm transition-colors group ${tileColors[tile.color]}`}>
                   <span className="text-base leading-none">{tile.emoji}</span>
                   <span className="font-medium truncate text-xs">{tile.name}</span>
+                  {tile.href === "/decisions" && decisionCount > 0 && (
+                    <span className="ml-auto text-xs bg-red-500/20 text-red-400 border border-red-500/30 px-1.5 py-0.5 rounded-full flex-shrink-0">
+                      {decisionCount}
+                    </span>
+                  )}
                 </div>
               </Link>
             ))}
