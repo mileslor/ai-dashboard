@@ -52,7 +52,21 @@ function renderMarkdown(raw: string): string {
     } else if (lines[i] === "---") {
       parts.push("<hr />");
     } else if (/^[-*] /.test(lines[i])) {
-      parts.push(`<li>${inline(lines[i].slice(2))}</li>`);
+      const items: string[] = [];
+      while (i < lines.length && /^[-*] /.test(lines[i])) {
+        items.push(`<li>${inline(lines[i].slice(2))}</li>`);
+        i++;
+      }
+      parts.push(`<ul>${items.join("")}</ul>`);
+      continue;
+    } else if (/^\d+\. /.test(lines[i])) {
+      const items: string[] = [];
+      while (i < lines.length && /^\d+\. /.test(lines[i])) {
+        items.push(`<li>${inline(lines[i].replace(/^\d+\. /, ""))}</li>`);
+        i++;
+      }
+      parts.push(`<ol>${items.join("")}</ol>`);
+      continue;
     } else if (lines[i].trim() === "") {
       // skip empty lines (paragraphs handled below)
     } else {
