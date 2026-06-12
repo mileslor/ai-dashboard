@@ -33,14 +33,19 @@ export default function HubLayout({ children }: { children: React.ReactNode }) {
   const [decisionCount, setDecisionCount] = useState(0);
 
   useEffect(() => {
-    fetch("/api/decisions")
-      .then((r) => r.json())
-      .then((d) => {
-        const high = (d.items ?? []).filter((i: { severity: string }) => i.severity !== "low").length;
-        setDecisionCount(high);
-      })
-      .catch(() => {});
-  }, [pathname]); // refresh badge on every page change
+    function fetchCount() {
+      fetch("/api/decisions")
+        .then((r) => r.json())
+        .then((d) => {
+          const high = (d.items ?? []).filter((i: { severity: string }) => i.severity !== "low").length;
+          setDecisionCount(high);
+        })
+        .catch(() => {});
+    }
+    fetchCount();
+    const t = setInterval(fetchCount, 30000);
+    return () => clearInterval(t);
+  }, [pathname]); // refresh badge on every page change + poll every 30s
 
   return (
     <div className="flex h-screen" style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)" }}>
