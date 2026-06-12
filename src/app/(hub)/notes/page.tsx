@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "@/lib/db";
 import type { Note } from "@/types";
-import { Plus, Search, FileText, Eye, Edit3, Trash2, X, Hash } from "lucide-react";
+import { Plus, Search, FileText, Eye, Edit3, Trash2, X, Hash, Link } from "lucide-react";
 import { useLang } from "@/lib/lang-context";
 
-function renderMarkdown(raw: string): string {
+function renderMarkdown(raw: string, noteTitles?: Set<string>): string {
   if (!raw.trim()) return '<p style="color:#475569;font-style:italic">Start writing...</p>';
 
   function esc(s: string): string {
@@ -18,7 +18,11 @@ function renderMarkdown(raw: string): string {
     return esc(s)
       .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
       .replace(/\*(.+?)\*/g, "<em>$1</em>")
-      .replace(/`([^`]+)`/g, "<code>$1</code>");
+      .replace(/`([^`]+)`/g, "<code>$1</code>")
+      .replace(/\[\[(.+?)\]\]/g, (_, title) => {
+        const exists = !noteTitles || noteTitles.has(title.toLowerCase());
+        return `<span class="wikilink${exists ? "" : " broken"}" data-title="${title}">${title}</span>`;
+      });
   }
 
   // Split into lines and handle code blocks first
@@ -91,6 +95,31 @@ export default function NotesPage() {
   const nt = t.notes;
 
   const notes = useLiveQuery(() => db.notes.orderBy("updatedAt").reverse().toArray(), []);
+
+  const noteTitles = useMemo(() => {
+    const s = new Set<string>();
+    (notes ?? []).forEach((n) => s.add(n.title.toLowerCase()));
+    return s;
+  }, [notes]);
+
+  const backlinks = useMemo(() => {
+    if (!selectedId || !notes) return [] as Note[];
+    const currentNote = notes.find((n) => n.id === selectedId);
+    if (!currentNote) return [] as Note[];
+    const pattern = `[[${currentNote.title}]]`;
+    return notes.filter((n) => n.id !== selectedId && n.content.includes(pattern));
+  }, [selectedId, notes]);
+
+  function handlePreviewClick(e: React.MouseEvent<HTMLDivElement>) {
+    const target = e.target as HTMLElement;
+    if (target.classList.contains("wikilink") && !target.classList.contains("broken")) {
+      const linkTitle = target.dataset.title;
+      if (linkTitle && notes) {
+        const linked = notes.find((n) => n.title.toLowerCase() === linkTitle.toLowerCase());
+        if (linked) loadNote(linked);
+      }
+    }
+  }
 
   const filtered = (notes ?? []).filter((n) => {
     if (!search) return true;
@@ -284,19 +313,44 @@ export default function NotesPage() {
             />
           </div>
 
-          <div className="border-t border-white/5 flex-1 overflow-auto">
-            {mode === "edit" ? (
-              <textarea
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder={nt.placeholder}
-                className="w-full h-full px-8 py-5 bg-transparent text-slate-300 placeholder:text-slate-700 text-sm leading-7 outline-none resize-none font-mono"
-              />
-            ) : (
-              <div
-                className="md-preview px-8 py-5"
-                dangerouslySetInnerHTML={{ __html: renderMarkdown(content) }}
-              />
+          <div className="border-t border-white/5 flex-1 overflow-auto flex flex-col">
+            <div className="flex-1">
+              {mode === "edit" ? (
+                <textarea
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder={nt.placeholder}
+                  className="w-full h-full px-8 py-5 bg-transparent text-slate-300 placeholder:text-slate-700 text-sm leading-7 outline-none resize-none font-mono"
+                />
+              ) : (
+                <div
+                  className="md-preview px-8 py-5"
+                  onClick={handlePreviewClick}
+                  dangerouslySetInnerHTML={{ __html: renderMarkdown(content, noteTitles) }}
+                />
+              )}
+            </div>
+
+            {/* Backlinks panel */}
+            {backlinks.length > 0 && (
+              <div className="border-t border-white/5 px-8 py-4 flex-shrink-0">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <Link className="w-3 h-3 text-slate-600" />
+                  <span className="text-xs font-medium text-slate-600 uppercase tracking-wider">Backlinks</span>
+                  <span className="text-xs text-slate-700">({backlinks.length})</span>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {backlinks.map((bl) => (
+                    <button
+                      key={bl.id}
+                      onClick={() => loadNote(bl)}
+                      className="text-xs text-indigo-400/70 bg-indigo-500/10 hover:bg-indigo-500/20 hover:text-indigo-300 border border-indigo-500/20 rounded-full px-2.5 py-0.5 transition-colors"
+                    >
+                      {bl.title}
+                    </button>
+                  ))}
+                </div>
+              </div>
             )}
           </div>
         </div>
