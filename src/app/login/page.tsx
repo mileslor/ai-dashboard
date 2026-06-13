@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Brain, Sparkles, ArrowRight } from "lucide-react";
+import { Brain, ArrowRight, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -64,7 +64,7 @@ export default function LoginPage() {
               className="w-full h-10 bg-gradient-to-r from-blue-600 to-violet-600 hover:opacity-90 text-white text-sm font-medium shadow-lg shadow-blue-500/25"
             >
               {loading ? (
-                "..."
+                <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <>
                   Continue
