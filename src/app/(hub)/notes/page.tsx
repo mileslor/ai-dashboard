@@ -58,7 +58,14 @@ function renderMarkdown(raw: string, noteTitles?: Set<string>): string {
     } else if (/^[-*] /.test(lines[i])) {
       const items: string[] = [];
       while (i < lines.length && /^[-*] /.test(lines[i])) {
-        items.push(`<li>${inline(lines[i].slice(2))}</li>`);
+        const text = lines[i].slice(2);
+        const taskMatch = text.match(/^\[([ xX])\] (.*)/);
+        if (taskMatch) {
+          const checked = taskMatch[1].toLowerCase() === "x";
+          items.push(`<li class="task-item${checked ? " task-checked" : ""}"><span class="task-box">${checked ? "✓" : ""}</span>${inline(taskMatch[2])}</li>`);
+        } else {
+          items.push(`<li>${inline(text)}</li>`);
+        }
         i++;
       }
       parts.push(`<ul>${items.join("")}</ul>`);
