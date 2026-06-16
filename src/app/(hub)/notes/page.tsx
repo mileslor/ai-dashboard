@@ -136,6 +136,20 @@ export default function NotesPage() {
     return notes.filter((n) => n.id !== selectedId && n.content.includes(pattern));
   }, [selectedId, notes]);
 
+  const backlinksMap = useMemo(() => {
+    const map = new Map<string, number>();
+    if (!notes) return map;
+    notes.forEach((note) => {
+      const matches = note.content.match(/\[\[(.+?)\]\]/g) ?? [];
+      matches.forEach((m) => {
+        const title = m.slice(2, -2).toLowerCase();
+        const target = notes.find((n) => n.id !== note.id && n.title.toLowerCase() === title);
+        if (target) map.set(target.id, (map.get(target.id) ?? 0) + 1);
+      });
+    });
+    return map;
+  }, [notes]);
+
   function handlePreviewClick(e: React.MouseEvent<HTMLDivElement>) {
     const target = e.target as HTMLElement;
     if (target.classList.contains("wikilink") && !target.classList.contains("broken")) {
@@ -265,6 +279,9 @@ export default function NotesPage() {
                 {note.tags.slice(0, 2).map((tag) => (
                   <span key={tag} className="text-xs text-blue-500/60">#{tag}</span>
                 ))}
+                {(backlinksMap.get(note.id) ?? 0) > 0 && (
+                  <span className="text-xs text-indigo-400/70">🔗{backlinksMap.get(note.id)}</span>
+                )}
               </div>
               {note.content && (
                 <p className="text-xs text-slate-600 mt-0.5 truncate leading-relaxed">
