@@ -316,7 +316,7 @@ export default function DecisionsPage() {
             <h1 className="text-lg font-semibold text-slate-100">🎯 決策中心</h1>
             <p className="text-xs text-slate-600 mt-0.5">
               {lastRefresh > 0
-                ? totalPending === 0 ? "冇待處理事項 ✓" : `${totalPending} 項需要關注`
+                ? `${totalPending === 0 ? "冇待處理事項 ✓" : `${totalPending} 項需要關注`} · ${new Date(lastRefresh).toLocaleTimeString("zh-HK", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}`
                 : "載入中…"}
             </p>
           </div>
