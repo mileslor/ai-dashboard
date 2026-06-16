@@ -186,17 +186,22 @@ export default function MessagesPage() {
     return () => clearInterval(t);
   }, [loadMeeting]);
 
-  async function sendMeeting() {
-    if (!meetingDraft.trim()) return;
-    const line = `\n[Miles ${todayStamp()}]: ${meetingDraft.trim()}`;
+  async function sendMeetingText(text: string) {
+    if (!text.trim()) return;
+    const line = `\n[Miles ${todayStamp()}]: ${text.trim()}`;
     await fetch("/api/channel", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ content: line, append: true }),
     });
-    setMeetingDraft("");
     await loadMeeting();
     inputRef.current?.focus();
+  }
+
+  async function sendMeeting() {
+    if (!meetingDraft.trim()) return;
+    await sendMeetingText(meetingDraft.trim());
+    setMeetingDraft("");
   }
 
   // ── DM ──────────────────────────────────────────────────────────────────────
