@@ -109,6 +109,12 @@ export default function NotesPage() {
     return s;
   }, [notes]);
 
+  const wordCount = useMemo(() => {
+    const text = content.trim();
+    if (!text) return { words: 0, chars: 0 };
+    return { words: text.split(/\s+/).length, chars: text.length };
+  }, [content]);
+
   const backlinks = useMemo(() => {
     if (!selectedId || !notes) return [] as Note[];
     const currentNote = notes.find((n) => n.id === selectedId);
@@ -280,13 +286,20 @@ export default function NotesPage() {
                 <Eye className="w-3 h-3" /> {nt.preview}
               </button>
             </div>
-            <button
-              onClick={deleteNote}
-              className="p-1.5 rounded-md text-slate-700 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-              title="Delete note"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
+            <div className="flex items-center gap-3">
+              {content.trim() && (
+                <span className="text-xs text-slate-700 tabular-nums">
+                  {wordCount.words}w · {wordCount.chars}c
+                </span>
+              )}
+              <button
+                onClick={deleteNote}
+                className="p-1.5 rounded-md text-slate-700 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                title="Delete note"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
 
           {/* Title */}
