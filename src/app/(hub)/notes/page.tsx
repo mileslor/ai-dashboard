@@ -7,6 +7,19 @@ import type { Note } from "@/types";
 import { Plus, Search, FileText, Eye, Edit3, Trash2, X, Hash, Link } from "lucide-react";
 import { useLang } from "@/lib/lang-context";
 
+function stripMarkdown(text: string): string {
+  return text
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/\*\*(.+?)\*\*/g, "$1")
+    .replace(/\*(.+?)\*/g, "$1")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/\[\[(.+?)\]\]/g, "$1")
+    .replace(/^[-*>\s]+/gm, "")
+    .replace(/^\d+\.\s+/gm, "")
+    .replace(/\n+/g, " ")
+    .trim();
+}
+
 function renderMarkdown(raw: string, noteTitles?: Set<string>): string {
   if (!raw.trim()) return '<p style="color:#475569;font-style:italic">Start writing...</p>';
 
@@ -255,7 +268,7 @@ export default function NotesPage() {
               </div>
               {note.content && (
                 <p className="text-xs text-slate-600 mt-0.5 truncate leading-relaxed">
-                  {note.content.replace(/^#+\s/gm, "").substring(0, 55)}
+                  {stripMarkdown(note.content).substring(0, 60)}
                 </p>
               )}
             </button>
