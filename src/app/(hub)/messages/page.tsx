@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { db, getAllAIs } from "@/lib/db";
 import type { AI, AIMessage } from "@/types";
-import { Send, Hash, Bot, Users, RefreshCw } from "lucide-react";
+import { Send, Hash, Bot, Users, RefreshCw, Search, X } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -157,6 +157,7 @@ export default function MessagesPage() {
   const [meetingDraft, setMeetingDraft] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // DM state
   const [agents, setAgents] = useState<AI[]>([]);
@@ -247,7 +248,10 @@ export default function MessagesPage() {
 
   const isMeeting = activeChannel === "meeting";
   const selectedAgent = agents.find((a) => a.id === activeChannel) ?? null;
-  const meetingGrouped = groupByDay(meetingMsgs);
+  const filteredMsgs = searchQuery.trim()
+    ? meetingMsgs.filter((m) => m.content.toLowerCase().includes(searchQuery.toLowerCase()) || m.sender.toLowerCase().includes(searchQuery.toLowerCase()))
+    : meetingMsgs;
+  const meetingGrouped = groupByDay(filteredMsgs);
   const dmGrouped = groupByDay(dmMsgs);
 
   return (
@@ -288,19 +292,39 @@ export default function MessagesPage() {
       {/* ── Meeting Room ──────────────────────────────────────────── */}
       {isMeeting && (
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-          <div className="border-b border-white/8 px-5 py-3 flex items-center gap-3 flex-shrink-0 bg-black/10">
-            <div className="w-8 h-8 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-lg">🏛️</div>
-            <div className="flex-1 min-w-0">
-              <p className="text-white font-semibold text-sm">AI 會議室</p>
-              <p className="text-slate-500 text-xs">ce + mx 協作頻道 · 實時讀取 channel.md</p>
+          <div className="border-b border-white/8 px-5 py-3 flex-shrink-0 bg-black/10">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center text-lg">🏛️</div>
+              <div className="flex-1 min-w-0">
+                <p className="text-white font-semibold text-sm">AI 會議室</p>
+                <p className="text-slate-500 text-xs">ce + mx 協作頻道 · 實時讀取 channel.md</p>
+              </div>
+              <button
+                onClick={() => loadMeeting()}
+                className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-300 transition-colors"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
+                {lastRefresh && <span>{lastRefresh.toLocaleTimeString("zh-HK", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>}
+              </button>
             </div>
-            <button
-              onClick={() => loadMeeting()}
-              className="flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-300 transition-colors"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
-              {lastRefresh && <span>{lastRefresh.toLocaleTimeString("zh-HK", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>}
-            </button>
+            <div className="mt-2 flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 focus-within:border-violet-500/40 transition-colors">
+              <Search className="w-3.5 h-3.5 text-slate-600 flex-shrink-0" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="搜尋訊息..."
+                className="flex-1 bg-transparent text-xs text-slate-300 placeholder:text-slate-600 outline-none"
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery("")} className="text-slate-600 hover:text-slate-400 transition-colors">
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+              {searchQuery && (
+                <span className="text-xs text-slate-600 flex-shrink-0">{filteredMsgs.length} 條</span>
+              )}
+            </div>
           </div>
 
           <div className="flex-1 overflow-y-auto px-5 py-4 space-y-1">
