@@ -97,6 +97,14 @@ export default function ActivityPage() {
     return new Date(ts).toLocaleString("en-GB", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
   }
 
+  function relTime(ts: number): string {
+    const diff = Date.now() - ts;
+    if (diff < 60000) return "剛才";
+    if (diff < 3600000) return `${Math.round(diff / 60000)}m 前`;
+    if (diff < 86400000) return `${Math.round(diff / 3600000)}h 前`;
+    return `${Math.round(diff / 86400000)}d 前`;
+  }
+
   const usedProjects = [...new Set(activities.map((a) => a.projectId).filter(Boolean))] as string[];
   const usedAis = [...new Set(activities.map((a) => a.aiId))];
 
@@ -197,7 +205,8 @@ export default function ActivityPage() {
                   <p className="text-slate-500 text-xs mt-0.5 truncate">{activity.details}</p>
                 )}
                 <div className="flex items-center gap-2 mt-1.5 text-xs text-slate-600 flex-wrap">
-                  <Clock className="w-3 h-3" /> {formatTime(activity.timestamp)}
+                  <Clock className="w-3 h-3" />
+                  <span title={formatTime(activity.timestamp)}>{relTime(activity.timestamp)}</span>
                   {showAi && <span className={label.color}>· {label.name}</span>}
                   {projName && color && (
                     <span className="flex items-center gap-1" style={{ color }}>
