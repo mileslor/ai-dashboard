@@ -14,6 +14,7 @@ const NAV_ITEMS = [
   { href: "/activity",   key: "activity"   as const, emoji: "⚡", color: "amber" },
   { href: "/team",       key: "team"       as const, emoji: "🤖", color: "blue" },
   { href: "/messages",   key: "messages"   as const, emoji: "💬", color: "violet" },
+  { href: "/sessions",   key: "sessions"   as const, emoji: "📋", color: "blue" },
   { href: "/tokens",     key: "tokens"     as const, emoji: "🔋", color: "cyan" },
 ];
 

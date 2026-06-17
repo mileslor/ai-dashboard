@@ -11,6 +11,7 @@ export const translations = {
       settings: "設定",
       automation: "自動化",
       decisions: "決策中心",
+      sessions: "工作記錄",
     },
     workspace: "本地工作區",
     notes: {
@@ -76,6 +77,7 @@ export const translations = {
       settings: "Settings",
       automation: "Automation",
       decisions: "Decisions",
+      sessions: "Sessions",
     },
     workspace: "Local workspace",
     notes: {
