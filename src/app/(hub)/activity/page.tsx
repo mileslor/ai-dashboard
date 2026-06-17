@@ -68,7 +68,11 @@ export default function ActivityPage() {
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+    const t = setInterval(() => load(), 30000);
+    return () => clearInterval(t);
+  }, [load]);
 
   const displayed = [...activities]
     .filter((a) => !filterProject || a.projectId === filterProject)
