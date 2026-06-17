@@ -59,6 +59,20 @@ export default function SessionsPage() {
     return new Date(dateStr).toLocaleDateString("zh-HK", { year: "numeric", month: "long", day: "numeric", weekday: "short" });
   }
 
+  function relDay(dateStr: string): string {
+    const today = new Date();
+    const d = new Date(dateStr);
+    const todayStr = today.toISOString().slice(0, 10);
+    const yest = new Date(today); yest.setDate(today.getDate() - 1);
+    const yesterdayStr = yest.toISOString().slice(0, 10);
+    if (dateStr === todayStr) return "今日";
+    if (dateStr === yesterdayStr) return "昨日";
+    const diffDays = Math.round((today.getTime() - d.getTime()) / 86400000);
+    if (diffDays < 30) return `${diffDays} 日前`;
+    if (diffDays < 365) return `${Math.round(diffDays / 30)} 個月前`;
+    return `${Math.round(diffDays / 365)} 年前`;
+  }
+
   return (
     <div className="min-h-screen">
       <div className="fixed inset-0 pointer-events-none">
@@ -101,10 +115,11 @@ export default function SessionsPage() {
                 {isOpen
                   ? <ChevronDown className="w-4 h-4 text-slate-500 flex-shrink-0" />
                   : <ChevronRight className="w-4 h-4 text-slate-600 flex-shrink-0" />}
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 flex items-center gap-2">
                   <p className="text-sm font-semibold text-slate-200">{fmtDate(session.date)}</p>
+                  <span className="text-xs text-slate-600 bg-white/5 px-1.5 py-0.5 rounded-md flex-shrink-0">{relDay(session.date)}</span>
                 </div>
-                <span className="text-xs text-slate-600">{totalBullets} 條記錄</span>
+                <span className="text-xs text-slate-600 flex-shrink-0">{totalBullets} 條記錄</span>
               </button>
 
               {/* Session body */}
