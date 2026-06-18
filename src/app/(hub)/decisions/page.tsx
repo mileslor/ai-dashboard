@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { RefreshCw, ChevronRight, Inbox, Send, CheckCircle2, Clock, Loader2 } from "lucide-react";
+import { RefreshCw, ChevronRight, Inbox, Send, CheckCircle2, Clock, Loader2, Search, X } from "lucide-react";
 
 interface ChoiceOption { label: string; text: string; }
 
@@ -277,11 +277,18 @@ function matchSeverity(sev: DecisionItem["severity"], filter: SeverityFilter) {
   return sev === "high" || sev === "medium";
 }
 
+function matchSearch(item: DecisionItem, q: string) {
+  if (!q) return true;
+  const lower = q.toLowerCase();
+  return item.title.toLowerCase().includes(lower) || item.detail.toLowerCase().includes(lower);
+}
+
 export default function DecisionsPage() {
   const [items, setItems] = useState<DecisionItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState(0);
   const [severityFilter, setSeverityFilter] = useState<SeverityFilter>("all");
+  const [searchQuery, setSearchQuery] = useState("");
   // id → reply text for choices answered in this session
   const [localAnswers, setLocalAnswers] = useState<Map<string, string>>(new Map());
 
@@ -307,13 +314,13 @@ export default function DecisionsPage() {
     setLocalAnswers((prev) => new Map([...prev, [id, reply]]));
   }
 
-  const choices = items.filter((i) => i.type === "choice" && matchSeverity(i.severity, severityFilter));
+  const choices = items.filter((i) => i.type === "choice" && matchSeverity(i.severity, severityFilter) && matchSearch(i, searchQuery));
   // Pending: no milesReply from API AND not answered locally
   const pendingChoices = choices.filter((i) => !i.milesReply && !localAnswers.has(i.id));
   // Answered: has milesReply from API OR answered locally this session
   const answeredChoices = choices.filter((i) => i.milesReply || localAnswers.has(i.id));
 
-  const otherItems = items.filter((i) => i.type !== "choice" && matchSeverity(i.severity, severityFilter));
+  const otherItems = items.filter((i) => i.type !== "choice" && matchSeverity(i.severity, severityFilter) && matchSearch(i, searchQuery));
   const grouped = SECTION_ORDER.filter((t) => t !== "choice").reduce<Record<string, DecisionItem[]>>((acc, type) => {
     acc[type] = otherItems.filter((i) => i.type === type);
     return acc;
@@ -338,6 +345,22 @@ export default function DecisionsPage() {
           <button onClick={load} disabled={loading} className="p-2 rounded-lg border border-white/8 hover:bg-white/5 text-slate-500 hover:text-slate-300 transition-colors">
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
           </button>
+        </div>
+
+        {/* Search bar */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-600 pointer-events-none" />
+          <input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="搜尋標題或內容…"
+            className="w-full bg-white/5 border border-white/8 rounded-lg pl-8 pr-8 py-2 text-xs text-slate-200 placeholder:text-slate-600 outline-none focus:border-white/20 transition-colors"
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-400 transition-colors">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
         {/* Severity filter chips */}
