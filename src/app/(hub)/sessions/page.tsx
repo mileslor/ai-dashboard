@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { RefreshCw, MessageSquare, ChevronDown, ChevronRight } from "lucide-react";
+import { useEffect, useState, useCallback, useMemo } from "react";
+import { RefreshCw, MessageSquare, ChevronDown, ChevronRight, Search, X } from "lucide-react";
 
 interface Section { heading: string; bullets: string[] }
 interface Session { date: string; timestamp: number; sections: Section[] }
@@ -26,6 +26,7 @@ export default function SessionsPage() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [query, setQuery] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -55,6 +56,17 @@ export default function SessionsPage() {
     });
   }
 
+  const filtered = useMemo(() => {
+    if (!query.trim()) return sessions;
+    const q = query.toLowerCase();
+    return sessions.filter((s) =>
+      s.date.includes(q) ||
+      s.sections.some(
+        (sec) => sec.heading.toLowerCase().includes(q) || sec.bullets.some((b) => b.toLowerCase().includes(q))
+      )
+    );
+  }, [sessions, query]);
+
   function fmtDate(dateStr: string) {
     return new Date(dateStr).toLocaleDateString("zh-HK", { year: "numeric", month: "long", day: "numeric", weekday: "short" });
   }
@@ -82,12 +94,32 @@ export default function SessionsPage() {
       <div className="relative px-8 pt-8 pb-4 flex items-center justify-between">
         <div>
           <h2 className="text-xl font-bold text-white">Sessions</h2>
-          <p className="text-slate-400 text-sm mt-0.5">{sessions.length} 次工作記錄 · 從 conversation-log.md</p>
+          <p className="text-slate-400 text-sm mt-0.5">
+            {query.trim() ? `${filtered.length} / ${sessions.length} 次` : `${sessions.length} 次`} 工作記錄 · 從 conversation-log.md
+          </p>
         </div>
         <button onClick={load} disabled={loading}
           className="h-8 w-8 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white flex items-center justify-center transition-colors disabled:opacity-40">
           <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
         </button>
+      </div>
+
+      <div className="relative px-8 pb-4">
+        <div className="relative max-w-2xl">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500 pointer-events-none" />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="搜尋 session…"
+            className="w-full pl-9 pr-8 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-violet-500/50 focus:bg-white/8 transition-all"
+          />
+          {query && (
+            <button onClick={() => setQuery("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="relative px-8 pb-12 max-w-2xl space-y-2">
@@ -103,9 +135,15 @@ export default function SessionsPage() {
             <p className="text-slate-700 text-xs mt-1">~/.claude/conversation-log.md</p>
           </div>
         )}
+        {!loading && sessions.length > 0 && filtered.length === 0 && (
+          <div className="text-center py-16">
+            <Search className="w-10 h-10 text-slate-700 mx-auto mb-3" />
+            <p className="text-slate-600 text-sm">冇符合「{query}」嘅 session</p>
+          </div>
+        )}
 
-        {sessions.map((session) => {
-          const isOpen = expanded.has(session.date);
+        {filtered.map((session) => {
+          const isOpen = expanded.has(session.date) || (!!query.trim());
           const totalBullets = session.sections.reduce((s, sec) => s + sec.bullets.length, 0);
           return (
             <div key={session.date} className="rounded-xl border border-white/8 bg-white/3 overflow-hidden">
