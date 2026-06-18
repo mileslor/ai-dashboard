@@ -158,6 +158,7 @@ export default function MessagesPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [senderFilter, setSenderFilter] = useState<"all" | "ce" | "mx" | "miles">("all");
 
   // DM state
   const [agents, setAgents] = useState<AI[]>([]);
@@ -248,9 +249,14 @@ export default function MessagesPage() {
 
   const isMeeting = activeChannel === "meeting";
   const selectedAgent = agents.find((a) => a.id === activeChannel) ?? null;
-  const filteredMsgs = searchQuery.trim()
-    ? meetingMsgs.filter((m) => m.content.toLowerCase().includes(searchQuery.toLowerCase()) || m.sender.toLowerCase().includes(searchQuery.toLowerCase()))
-    : meetingMsgs;
+  const filteredMsgs = meetingMsgs.filter((m) => {
+    if (senderFilter !== "all" && m.sender !== senderFilter) return false;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      return m.content.toLowerCase().includes(q) || m.sender.toLowerCase().includes(q);
+    }
+    return true;
+  });
   const meetingGrouped = groupByDay(filteredMsgs);
   const dmGrouped = groupByDay(dmMsgs);
 
@@ -321,9 +327,29 @@ export default function MessagesPage() {
                   <X className="w-3 h-3" />
                 </button>
               )}
-              {searchQuery && (
+              {(searchQuery || senderFilter !== "all") && (
                 <span className="text-xs text-slate-600 flex-shrink-0">{filteredMsgs.length} 條</span>
               )}
+            </div>
+            <div className="mt-2 flex items-center gap-1.5">
+              {(["all", "ce", "mx", "miles"] as const).map((s) => {
+                const meta: Record<string, { label: string; active: string }> = {
+                  all:   { label: "全部", active: "bg-white/15 text-slate-200 border-white/20" },
+                  ce:    { label: "🤖 ce", active: "bg-sky-500/20 text-sky-300 border-sky-500/30" },
+                  mx:    { label: "🟣 mx", active: "bg-violet-500/20 text-violet-300 border-violet-500/30" },
+                  miles: { label: "👤 Miles", active: "bg-slate-500/20 text-slate-300 border-slate-500/30" },
+                };
+                const isActive = senderFilter === s;
+                return (
+                  <button
+                    key={s}
+                    onClick={() => setSenderFilter(s)}
+                    className={`px-2 py-0.5 rounded-md text-xs border transition-colors ${isActive ? meta[s].active : "text-slate-600 border-white/8 hover:text-slate-400 hover:border-white/15"}`}
+                  >
+                    {meta[s].label}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
