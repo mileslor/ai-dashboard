@@ -154,6 +154,12 @@ export default function NotesPage() {
     return map;
   }, [notes]);
 
+  const projectMap = useMemo(() => {
+    const m = new Map<string, Project>();
+    (projects ?? []).forEach((p) => m.set(p.id, p));
+    return m;
+  }, [projects]);
+
   function handlePreviewClick(e: React.MouseEvent<HTMLDivElement>) {
     const target = e.target as HTMLElement;
     if (target.classList.contains("wikilink") && !target.classList.contains("broken")) {
@@ -297,6 +303,12 @@ export default function NotesPage() {
                 ))}
                 {(backlinksMap.get(note.id) ?? 0) > 0 && (
                   <span className="text-xs text-indigo-400/70">🔗{backlinksMap.get(note.id)}</span>
+                )}
+                {note.projectId && projectMap.has(note.projectId) && (
+                  <span className="inline-flex items-center gap-0.5 text-xs text-slate-600 flex-shrink-0 min-w-0">
+                    <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: projectMap.get(note.projectId)!.color }} />
+                    <span className="truncate max-w-[64px]">{projectMap.get(note.projectId)!.title}</span>
+                  </span>
                 )}
               </div>
               {note.content && (
