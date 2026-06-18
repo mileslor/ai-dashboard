@@ -28,11 +28,18 @@ const colorMap: Record<string, { active: string }> = {
   cyan:    { active: "bg-cyan-500/20 text-cyan-400 border-cyan-500/30" },
 };
 
+function jobHasError(job: { enabled: boolean; status?: string; state?: { runningAtMs?: number; lastStatus?: string; lastRunStatus?: string } }): boolean {
+  if (!job.enabled) return false;
+  const s = job.state?.lastStatus ?? job.state?.lastRunStatus;
+  return s === "error";
+}
+
 export default function HubLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { t, lang, toggle } = useLang();
   const [decisionCount, setDecisionCount] = useState(0);
   const [msgCount, setMsgCount] = useState(0);
+  const [automationErrors, setAutomationErrors] = useState(0);
 
   useEffect(() => {
     function fetchCounts() {
@@ -46,6 +53,13 @@ export default function HubLayout({ children }: { children: React.ReactNode }) {
       fetch("/api/channel/count")
         .then((r) => r.json())
         .then((d) => setMsgCount(d.count ?? 0))
+        .catch(() => {});
+      fetch("/api/openclaw")
+        .then((r) => r.json())
+        .then((d) => {
+          const errCount = (d.jobs ?? []).filter(jobHasError).length;
+          setAutomationErrors(errCount);
+        })
         .catch(() => {});
     }
     fetchCounts();
@@ -107,7 +121,12 @@ export default function HubLayout({ children }: { children: React.ReactNode }) {
                       {msgCount}
                     </span>
                   )}
-                  {isActive && !isDecisions && href !== "/messages" && <ChevronRight className="w-3 h-3 opacity-60 flex-shrink-0" />}
+                  {href === "/automation" && automationErrors > 0 && (
+                    <span className="text-xs bg-red-500/25 text-red-400 border border-red-500/30 px-1.5 py-0.5 rounded-full flex-shrink-0 leading-none">
+                      {automationErrors}
+                    </span>
+                  )}
+                  {isActive && !isDecisions && href !== "/messages" && href !== "/automation" && <ChevronRight className="w-3 h-3 opacity-60 flex-shrink-0" />}
                 </div>
               </Link>
             );
