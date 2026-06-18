@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { RefreshCw, MessageSquare, ChevronDown, ChevronRight, Search, X } from "lucide-react";
+import { RefreshCw, MessageSquare, ChevronDown, ChevronRight, Search, X, ChevronsUpDown } from "lucide-react";
 
 interface Section { heading: string; bullets: string[] }
 interface Session { date: string; timestamp: number; sections: Section[] }
@@ -67,6 +67,16 @@ export default function SessionsPage() {
     );
   }, [sessions, query]);
 
+  const allExpanded = filtered.length > 0 && filtered.every((s) => expanded.has(s.date) || !!query.trim());
+
+  function toggleAll() {
+    if (allExpanded) {
+      setExpanded(new Set());
+    } else {
+      setExpanded(new Set(filtered.map((s) => s.date)));
+    }
+  }
+
   function fmtDate(dateStr: string) {
     return new Date(dateStr).toLocaleDateString("zh-HK", { year: "numeric", month: "long", day: "numeric", weekday: "short" });
   }
@@ -98,10 +108,19 @@ export default function SessionsPage() {
             {query.trim() ? `${filtered.length} / ${sessions.length} 次` : `${sessions.length} 次`} 工作記錄 · 從 conversation-log.md
           </p>
         </div>
-        <button onClick={load} disabled={loading}
-          className="h-8 w-8 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white flex items-center justify-center transition-colors disabled:opacity-40">
-          <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
-        </button>
+        <div className="flex items-center gap-1.5">
+          {filtered.length > 0 && !loading && (
+            <button onClick={toggleAll} title={allExpanded ? "全部收起" : "全部展開"}
+              className="h-8 px-2.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white flex items-center gap-1.5 transition-colors text-xs">
+              <ChevronsUpDown className="w-3.5 h-3.5" />
+              {allExpanded ? "收起" : "展開"}
+            </button>
+          )}
+          <button onClick={load} disabled={loading}
+            className="h-8 w-8 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white flex items-center justify-center transition-colors disabled:opacity-40">
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+          </button>
+        </div>
       </div>
 
       <div className="relative px-8 pb-4">
