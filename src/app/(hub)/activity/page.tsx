@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Plus, X, Zap as ActivityIcon, Clock, FolderKanban, RefreshCw } from "lucide-react";
+import { Plus, X, Zap as ActivityIcon, Clock, FolderKanban, RefreshCw, Search } from "lucide-react";
 
 interface ActivityEntry {
   id: string;
@@ -48,6 +48,7 @@ export default function ActivityPage() {
   const [loading, setLoading] = useState(true);
   const [filterProject, setFilterProject] = useState("");
   const [filterAi, setFilterAi] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const [newAction, setNewAction] = useState("");
   const [newDetails, setNewDetails] = useState("");
@@ -77,6 +78,11 @@ export default function ActivityPage() {
   const displayed = [...activities]
     .filter((a) => !filterProject || a.projectId === filterProject)
     .filter((a) => !filterAi || a.aiId === filterAi)
+    .filter((a) => {
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase();
+      return a.action.toLowerCase().includes(q) || (a.details ?? "").toLowerCase().includes(q);
+    })
     .reverse();
 
   async function handleAdd(e: React.FormEvent) {
@@ -133,6 +139,22 @@ export default function ActivityPage() {
               <Plus className="w-4 h-4" /> Log
             </button>
           </div>
+        </div>
+
+        {/* Search */}
+        <div className="relative mb-3">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-600 pointer-events-none" />
+          <input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="搜尋活動..."
+            className="w-full max-w-xs h-8 bg-white/5 border border-white/10 rounded-lg pl-8 pr-8 text-sm text-slate-300 placeholder:text-slate-600 outline-none focus:border-amber-500/40 transition-colors"
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-400 transition-colors">
+              <X className="w-3 h-3" />
+            </button>
+          )}
         </div>
 
         {/* Project filter */}
