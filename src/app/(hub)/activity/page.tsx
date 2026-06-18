@@ -48,6 +48,7 @@ export default function ActivityPage() {
   const [loading, setLoading] = useState(true);
   const [filterProject, setFilterProject] = useState("");
   const [filterAi, setFilterAi] = useState("");
+  const [filterTime, setFilterTime] = useState<"" | "today" | "week">("");
   const [searchQuery, setSearchQuery] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const [newAction, setNewAction] = useState("");
@@ -75,9 +76,17 @@ export default function ActivityPage() {
     return () => clearInterval(t);
   }, [load]);
 
+  const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+  const weekStart = new Date(); weekStart.setDate(weekStart.getDate() - weekStart.getDay()); weekStart.setHours(0, 0, 0, 0);
+
   const displayed = [...activities]
     .filter((a) => !filterProject || a.projectId === filterProject)
     .filter((a) => !filterAi || a.aiId === filterAi)
+    .filter((a) => {
+      if (filterTime === "today") return a.timestamp >= todayStart.getTime();
+      if (filterTime === "week") return a.timestamp >= weekStart.getTime();
+      return true;
+    })
     .filter((a) => {
       if (!searchQuery.trim()) return true;
       const q = searchQuery.toLowerCase();
@@ -190,6 +199,19 @@ export default function ActivityPage() {
               <button key={id} onClick={() => setFilterAi(active ? "" : id)}
                 className={`h-5 px-2 rounded-full text-xs transition-colors border ${active ? "bg-white/10 border-white/20" : "bg-white/3 border-white/8 hover:text-slate-400 text-slate-600"}`}>
                 <span className={active ? label.color : ""}>{label.name}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Time filter */}
+        <div className="flex gap-1.5 flex-wrap mt-2">
+          {(["", "today", "week"] as const).map((val) => {
+            const label = val === "" ? "全部時間" : val === "today" ? "今日" : "本週";
+            return (
+              <button key={val} onClick={() => setFilterTime(val)}
+                className={`h-5 px-2 rounded-full text-xs transition-colors border ${filterTime === val ? "bg-white/10 text-white border-white/20" : "bg-white/3 text-slate-600 border-white/8 hover:text-slate-400"}`}>
+                {label}
               </button>
             );
           })}
