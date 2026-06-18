@@ -31,6 +31,7 @@ export default function ProjectsPage() {
   const [showAdd, setShowAdd] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
+  const [newColor, setNewColor] = useState(PROJECT_COLORS[0]);
   const [editDesc, setEditDesc] = useState("");
   const [tab, setTab] = useState<Tab>("overview");
   const [activities, setActivities] = useState<ActivityEntry[]>([]);
@@ -93,9 +94,8 @@ export default function ProjectsPage() {
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
     if (!newTitle.trim()) return;
-    const color = PROJECT_COLORS[projects.length % PROJECT_COLORS.length];
-    const id = await addProject({ title: newTitle.trim(), description: newDesc.trim(), status: "active", color });
-    setNewTitle(""); setNewDesc(""); setShowAdd(false);
+    const id = await addProject({ title: newTitle.trim(), description: newDesc.trim(), status: "active", color: newColor });
+    setNewTitle(""); setNewDesc(""); setNewColor(PROJECT_COLORS[0]); setShowAdd(false);
     load();
     setTimeout(() => setSelectedId(id), 80);
   }
@@ -300,6 +300,16 @@ export default function ProjectsPage() {
                 <label className="text-slate-400 text-xs font-medium mb-1.5 block">{pt.description}</label>
                 <input value={newDesc} onChange={(e) => setNewDesc(e.target.value)} placeholder="What is this project about?"
                   className="w-full h-10 rounded-lg bg-white/8 border border-white/15 text-white placeholder:text-slate-600 px-3 text-sm outline-none focus:border-emerald-500/50 transition-colors" />
+              </div>
+              <div>
+                <label className="text-slate-400 text-xs font-medium mb-1.5 block">顏色</label>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {PROJECT_COLORS.map((c) => (
+                    <button key={c} type="button" onClick={() => setNewColor(c)}
+                      className={`w-6 h-6 rounded-full transition-all ${newColor === c ? "ring-2 ring-white ring-offset-2 ring-offset-slate-800 scale-110" : "hover:scale-110"}`}
+                      style={{ backgroundColor: c }} />
+                  ))}
+                </div>
               </div>
               <button type="submit"
                 className="w-full h-10 rounded-lg bg-gradient-to-r from-emerald-600 to-green-600 hover:opacity-90 text-white text-sm font-medium transition-opacity">
