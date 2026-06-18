@@ -38,6 +38,7 @@ export default function ProjectsPage() {
   const [activities, setActivities] = useState<ActivityEntry[]>([]);
   const [notes, setNotes] = useState<NoteEntry[]>([]);
   const [tabLoading, setTabLoading] = useState(false);
+  const [tabCounts, setTabCounts] = useState<{ notes: number | null; activities: number | null }>({ notes: null, activities: null });
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const selected = projects.find((p) => p.id === selectedId) ?? null;
@@ -54,7 +55,21 @@ export default function ProjectsPage() {
   useEffect(() => { load(); }, []);
 
   useEffect(() => {
-    if (selected) { setEditDesc(selected.description); setTab("overview"); }
+    if (selected) {
+      setEditDesc(selected.description);
+      setTab("overview");
+      setTabCounts({ notes: null, activities: null });
+      const id = selected.id;
+      Promise.all([
+        fetch(`/api/notes?projectId=${encodeURIComponent(id)}`).then((r) => r.ok ? r.json() : null),
+        fetch("/api/activities").then((r) => r.ok ? r.json() : null),
+      ]).then(([notesData, actsData]) => {
+        setTabCounts({
+          notes: notesData ? notesData.notes.length : null,
+          activities: actsData ? actsData.activities.filter((a: ActivityEntry) => a.projectId === id).length : null,
+        });
+      });
+    }
   }, [selectedId]);
 
   useEffect(() => {
@@ -224,10 +239,15 @@ export default function ProjectsPage() {
 
           {/* Tabs */}
           <div className="px-8 border-b border-white/8 flex gap-0 flex-shrink-0">
-            {([["overview", AlignLeft, "概覽"], ["activities", Zap, "活動"], ["notes", FileText, "筆記"]] as const).map(([id, Icon, label]) => (
+            {([["overview", AlignLeft, "概覽", null], ["activities", Zap, "活動", tabCounts.activities], ["notes", FileText, "筆記", tabCounts.notes]] as const).map(([id, Icon, label, count]) => (
               <button key={id} onClick={() => switchTab(id as Tab)}
                 className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium border-b-2 transition-colors ${tab === id ? "border-violet-500 text-violet-300" : "border-transparent text-slate-600 hover:text-slate-400"}`}>
                 <Icon className="w-3.5 h-3.5" />{label}
+                {count !== null && count > 0 && (
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${tab === id ? "bg-violet-500/20 text-violet-300" : "bg-white/8 text-slate-500"}`}>
+                    {count}
+                  </span>
+                )}
               </button>
             ))}
           </div>
