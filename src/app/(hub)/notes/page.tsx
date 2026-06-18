@@ -227,7 +227,15 @@ export default function NotesPage() {
       <aside className="w-60 flex-shrink-0 border-r border-white/10 flex flex-col bg-black/20">
         <div className="p-3 border-b border-white/10 flex flex-col gap-2 flex-shrink-0">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">{nt.panel}</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">{nt.panel}</span>
+              {search && filtered.length > 0 && (
+                <span className="text-xs text-blue-400/70 bg-blue-500/10 rounded-full px-1.5 py-0.5 leading-none">{filtered.length}</span>
+              )}
+              {!search && (notes?.length ?? 0) > 0 && (
+                <span className="text-xs text-slate-600 tabular-nums">{notes?.length}</span>
+              )}
+            </div>
             <button
               onClick={newNote}
               className="w-6 h-6 rounded-md hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
