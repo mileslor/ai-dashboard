@@ -32,9 +32,10 @@ export default function HubLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { t, lang, toggle } = useLang();
   const [decisionCount, setDecisionCount] = useState(0);
+  const [msgCount, setMsgCount] = useState(0);
 
   useEffect(() => {
-    function fetchCount() {
+    function fetchCounts() {
       fetch("/api/decisions")
         .then((r) => r.json())
         .then((d) => {
@@ -42,9 +43,13 @@ export default function HubLayout({ children }: { children: React.ReactNode }) {
           setDecisionCount(high);
         })
         .catch(() => {});
+      fetch("/api/channel/count")
+        .then((r) => r.json())
+        .then((d) => setMsgCount(d.count ?? 0))
+        .catch(() => {});
     }
-    fetchCount();
-    const t = setInterval(fetchCount, 30000);
+    fetchCounts();
+    const t = setInterval(fetchCounts, 30000);
     return () => clearInterval(t);
   }, [pathname]); // refresh badge on every page change + poll every 30s
 
@@ -97,7 +102,12 @@ export default function HubLayout({ children }: { children: React.ReactNode }) {
                       {decisionCount}
                     </span>
                   )}
-                  {isActive && !isDecisions && <ChevronRight className="w-3 h-3 opacity-60 flex-shrink-0" />}
+                  {href === "/messages" && msgCount > 0 && (
+                    <span className="text-xs bg-blue-500/25 text-blue-400 border border-blue-500/30 px-1.5 py-0.5 rounded-full flex-shrink-0 leading-none">
+                      {msgCount}
+                    </span>
+                  )}
+                  {isActive && !isDecisions && href !== "/messages" && <ChevronRight className="w-3 h-3 opacity-60 flex-shrink-0" />}
                 </div>
               </Link>
             );
