@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "@/lib/db";
 import type { Note, Project } from "@/types";
-import { Plus, Search, FileText, Eye, Edit3, Trash2, X, Hash, Link, FolderKanban } from "lucide-react";
+import { Plus, Search, FileText, Eye, Edit3, Trash2, X, Hash, Link, FolderKanban, ChevronDown } from "lucide-react";
 import { useLang } from "@/lib/lang-context";
 
 function stripMarkdown(text: string): string {
@@ -385,18 +385,21 @@ export default function NotesPage() {
 
           {/* Project link */}
           <div className="px-8 pb-3 flex items-center gap-2 flex-shrink-0">
-            <FolderKanban className="w-3.5 h-3.5 text-slate-700 flex-shrink-0" />
-            <select
-              value={projectId ?? ""}
-              onChange={(e) => setProjectId(e.target.value || null)}
-              className="bg-transparent text-xs text-slate-600 outline-none cursor-pointer hover:text-slate-400 transition-colors"
-              style={{ appearance: "none" }}
-            >
-              <option value="" style={{ background: "#1e293b" }}>無項目</option>
-              {(projects ?? []).filter((p) => p.status === "active").map((p) => (
-                <option key={p.id} value={p.id} style={{ background: "#1e293b" }}>{p.title}</option>
-              ))}
-            </select>
+            <FolderKanban className={`w-3.5 h-3.5 flex-shrink-0 ${projectId ? "text-slate-500" : "text-slate-700"}`} />
+            <div className="relative flex items-center">
+              <select
+                value={projectId ?? ""}
+                onChange={(e) => setProjectId(e.target.value || null)}
+                className={`bg-transparent text-xs outline-none cursor-pointer pr-4 transition-colors ${projectId ? "text-slate-400 hover:text-slate-200" : "text-slate-600 hover:text-slate-400"}`}
+                style={{ appearance: "none" }}
+              >
+                <option value="" style={{ background: "#1e293b" }}>無項目</option>
+                {(projects ?? []).filter((p) => p.status === "active").map((p) => (
+                  <option key={p.id} value={p.id} style={{ background: "#1e293b" }}>{p.title}</option>
+                ))}
+              </select>
+              <ChevronDown className="w-2.5 h-2.5 text-slate-600 absolute right-0 pointer-events-none" />
+            </div>
             {projectId && (
               <button
                 onClick={() => setProjectId(null)}
