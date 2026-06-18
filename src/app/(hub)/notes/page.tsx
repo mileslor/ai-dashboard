@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "@/lib/db";
-import type { Note } from "@/types";
-import { Plus, Search, FileText, Eye, Edit3, Trash2, X, Hash, Link } from "lucide-react";
+import type { Note, Project } from "@/types";
+import { Plus, Search, FileText, Eye, Edit3, Trash2, X, Hash, Link, FolderKanban } from "lucide-react";
 import { useLang } from "@/lib/lang-context";
 
 function stripMarkdown(text: string): string {
@@ -108,6 +108,7 @@ export default function NotesPage() {
   const [content, setContent] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
+  const [projectId, setProjectId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [mode, setMode] = useState<"edit" | "preview">("edit");
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -115,6 +116,7 @@ export default function NotesPage() {
   const nt = t.notes;
 
   const notes = useLiveQuery(() => db.notes.orderBy("updatedAt").reverse().toArray(), []);
+  const projects = useLiveQuery(() => db.projects.orderBy("title").toArray(), []) as Project[] | undefined;
 
   const noteTitles = useMemo(() => {
     const s = new Set<string>();
@@ -176,6 +178,7 @@ export default function NotesPage() {
     setTitle(note.title);
     setContent(note.content);
     setTags(note.tags);
+    setProjectId(note.projectId ?? null);
     setTagInput("");
     setMode("edit");
   }
@@ -192,10 +195,10 @@ export default function NotesPage() {
     if (!selectedId) return;
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
-      db.notes.update(selectedId, { title: title || "Untitled", content, tags, updatedAt: Date.now() });
+      db.notes.update(selectedId, { title: title || "Untitled", content, tags, projectId: projectId ?? undefined, updatedAt: Date.now() });
     }, 600);
     return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
-  }, [title, content, tags, selectedId]);
+  }, [title, content, tags, projectId, selectedId]);
 
   function addTag(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter" && tagInput.trim()) {
@@ -351,7 +354,7 @@ export default function NotesPage() {
           </div>
 
           {/* Tags */}
-          <div className="px-8 pb-3 flex items-center gap-1.5 flex-wrap flex-shrink-0 min-h-[28px]">
+          <div className="px-8 pb-2 flex items-center gap-1.5 flex-wrap flex-shrink-0 min-h-[28px]">
             <Hash className="w-3.5 h-3.5 text-slate-700 flex-shrink-0" />
             {tags.map((tag) => (
               <button
@@ -369,6 +372,30 @@ export default function NotesPage() {
               placeholder={tags.length === 0 ? nt.addTag : "+"}
               className="bg-transparent text-xs text-slate-600 placeholder:text-slate-700 outline-none w-28"
             />
+          </div>
+
+          {/* Project link */}
+          <div className="px-8 pb-3 flex items-center gap-2 flex-shrink-0">
+            <FolderKanban className="w-3.5 h-3.5 text-slate-700 flex-shrink-0" />
+            <select
+              value={projectId ?? ""}
+              onChange={(e) => setProjectId(e.target.value || null)}
+              className="bg-transparent text-xs text-slate-600 outline-none cursor-pointer hover:text-slate-400 transition-colors"
+              style={{ appearance: "none" }}
+            >
+              <option value="" style={{ background: "#1e293b" }}>無項目</option>
+              {(projects ?? []).filter((p) => p.status === "active").map((p) => (
+                <option key={p.id} value={p.id} style={{ background: "#1e293b" }}>{p.title}</option>
+              ))}
+            </select>
+            {projectId && (
+              <button
+                onClick={() => setProjectId(null)}
+                className="text-slate-700 hover:text-slate-500 transition-colors"
+              >
+                <X className="w-2.5 h-2.5" />
+              </button>
+            )}
           </div>
 
           <div className="border-t border-white/5 flex-1 overflow-auto flex flex-col">
