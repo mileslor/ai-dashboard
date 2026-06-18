@@ -33,6 +33,7 @@ export default function ProjectsPage() {
   const [newDesc, setNewDesc] = useState("");
   const [newColor, setNewColor] = useState(PROJECT_COLORS[0]);
   const [editDesc, setEditDesc] = useState("");
+  const [showColorPicker, setShowColorPicker] = useState(false);
   const [tab, setTab] = useState<Tab>("overview");
   const [activities, setActivities] = useState<ActivityEntry[]>([]);
   const [notes, setNotes] = useState<NoteEntry[]>([]);
@@ -166,7 +167,27 @@ export default function ProjectsPage() {
           {/* Header */}
           <div className="border-b border-white/10 px-8 py-4 flex items-center justify-between flex-shrink-0">
             <div className="flex items-center gap-3">
-              <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: selected.color }} />
+              <div className="relative">
+                <button
+                  onClick={() => setShowColorPicker((v) => !v)}
+                  className="w-3 h-3 rounded-full flex-shrink-0 hover:ring-2 hover:ring-white/40 hover:ring-offset-1 hover:ring-offset-transparent transition-all"
+                  style={{ backgroundColor: selected.color }}
+                  title="變更顏色"
+                />
+                {showColorPicker && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setShowColorPicker(false)} />
+                  <div className="absolute top-5 left-0 z-20 bg-slate-800 border border-white/15 rounded-xl p-3 shadow-2xl flex gap-2 flex-wrap w-48">
+                    {PROJECT_COLORS.map((c) => (
+                      <button key={c} type="button"
+                        onClick={() => { updateProject(selected.id, { color: c }).then(load); setShowColorPicker(false); }}
+                        className={`w-6 h-6 rounded-full transition-all ${selected.color === c ? "ring-2 ring-white ring-offset-2 ring-offset-slate-800 scale-110" : "hover:scale-110"}`}
+                        style={{ backgroundColor: c }} />
+                    ))}
+                  </div>
+                  </>
+                )}
+              </div>
               <input defaultValue={selected.title} key={selected.id + "_title"}
                 onBlur={(e) => updateProject(selected.id, { title: e.target.value }).then(load)}
                 className="bg-transparent text-xl font-bold text-white outline-none hover:bg-white/5 focus:bg-white/5 rounded px-1 -ml-1 transition-colors" />
