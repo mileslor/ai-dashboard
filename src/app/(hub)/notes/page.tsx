@@ -112,6 +112,8 @@ export default function NotesPage() {
   const [search, setSearch] = useState("");
   const [mode, setMode] = useState<"edit" | "preview">("edit");
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
+  const [savedFlash, setSavedFlash] = useState(false);
   const { t } = useLang();
   const nt = t.notes;
 
@@ -188,6 +190,7 @@ export default function NotesPage() {
     const now = Date.now();
     await db.notes.add({ id, title: "Untitled", content: "", tags: [], createdAt: now, updatedAt: now });
     loadNote({ id, title: "Untitled", content: "", tags: [], createdAt: now, updatedAt: now });
+    setTimeout(() => { titleInputRef.current?.select(); titleInputRef.current?.focus(); }, 50);
   }
 
   // Auto-save on change
@@ -196,6 +199,8 @@ export default function NotesPage() {
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
       db.notes.update(selectedId, { title: title || "Untitled", content, tags, projectId: projectId ?? undefined, updatedAt: Date.now() });
+      setSavedFlash(true);
+      setTimeout(() => setSavedFlash(false), 800);
     }, 600);
     return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
   }, [title, content, tags, projectId, selectedId]);
@@ -328,6 +333,9 @@ export default function NotesPage() {
               </button>
             </div>
             <div className="flex items-center gap-3">
+              {savedFlash && (
+                <span className="text-xs text-emerald-500/70 transition-opacity">已儲存</span>
+              )}
               {content.trim() && (
                 <span className="text-xs text-slate-700 tabular-nums">
                   {wordCount.words}w · {wordCount.chars}c
@@ -346,6 +354,7 @@ export default function NotesPage() {
           {/* Title */}
           <div className="px-8 pt-7 pb-1 flex-shrink-0">
             <input
+              ref={titleInputRef}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={nt.untitled}
