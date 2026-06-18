@@ -263,10 +263,25 @@ function ItemCard({ item, onAction }: { item: DecisionItem; onAction: () => void
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
+type SeverityFilter = "all" | "high" | "medium";
+
+const SEVERITY_CHIPS: { value: SeverityFilter; label: string }[] = [
+  { value: "all",    label: "全部" },
+  { value: "high",   label: "⚠️ 高優先" },
+  { value: "medium", label: "📌 中優先" },
+];
+
+function matchSeverity(sev: DecisionItem["severity"], filter: SeverityFilter) {
+  if (filter === "all") return true;
+  if (filter === "high") return sev === "high";
+  return sev === "high" || sev === "medium";
+}
+
 export default function DecisionsPage() {
   const [items, setItems] = useState<DecisionItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState(0);
+  const [severityFilter, setSeverityFilter] = useState<SeverityFilter>("all");
   // id → reply text for choices answered in this session
   const [localAnswers, setLocalAnswers] = useState<Map<string, string>>(new Map());
 
@@ -292,13 +307,13 @@ export default function DecisionsPage() {
     setLocalAnswers((prev) => new Map([...prev, [id, reply]]));
   }
 
-  const choices = items.filter((i) => i.type === "choice");
+  const choices = items.filter((i) => i.type === "choice" && matchSeverity(i.severity, severityFilter));
   // Pending: no milesReply from API AND not answered locally
   const pendingChoices = choices.filter((i) => !i.milesReply && !localAnswers.has(i.id));
   // Answered: has milesReply from API OR answered locally this session
   const answeredChoices = choices.filter((i) => i.milesReply || localAnswers.has(i.id));
 
-  const otherItems = items.filter((i) => i.type !== "choice");
+  const otherItems = items.filter((i) => i.type !== "choice" && matchSeverity(i.severity, severityFilter));
   const grouped = SECTION_ORDER.filter((t) => t !== "choice").reduce<Record<string, DecisionItem[]>>((acc, type) => {
     acc[type] = otherItems.filter((i) => i.type === type);
     return acc;
@@ -323,6 +338,23 @@ export default function DecisionsPage() {
           <button onClick={load} disabled={loading} className="p-2 rounded-lg border border-white/8 hover:bg-white/5 text-slate-500 hover:text-slate-300 transition-colors">
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
           </button>
+        </div>
+
+        {/* Severity filter chips */}
+        <div className="flex gap-2">
+          {SEVERITY_CHIPS.map((chip) => (
+            <button
+              key={chip.value}
+              onClick={() => setSeverityFilter(chip.value)}
+              className={`text-xs px-3 py-1.5 rounded-full border transition-colors font-medium ${
+                severityFilter === chip.value
+                  ? "bg-slate-500/25 border-slate-400/40 text-slate-200"
+                  : "border-white/8 text-slate-600 hover:text-slate-400 hover:border-white/15"
+              }`}
+            >
+              {chip.label}
+            </button>
+          ))}
         </div>
 
         {/* Pending choices */}
