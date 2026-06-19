@@ -167,7 +167,7 @@ export default function NotesPage() {
       const linkTitle = target.dataset.title;
       if (linkTitle && notes) {
         const linked = notes.find((n) => n.title.toLowerCase() === linkTitle.toLowerCase());
-        if (linked) loadNote(linked);
+        if (linked) loadNote(linked, true);
       }
     }
   }
@@ -183,14 +183,14 @@ export default function NotesPage() {
     );
   });
 
-  function loadNote(note: Note) {
+  function loadNote(note: Note, preserveMode = false) {
     setSelectedId(note.id);
     setTitle(note.title);
     setContent(note.content);
     setTags(note.tags);
     setProjectId(note.projectId ?? null);
     setTagInput("");
-    setMode("edit");
+    if (!preserveMode) setMode("edit");
   }
 
   async function newNote() {
@@ -200,6 +200,18 @@ export default function NotesPage() {
     loadNote({ id, title: "Untitled", content: "", tags: [], createdAt: now, updatedAt: now });
     setTimeout(() => { titleInputRef.current?.select(); titleInputRef.current?.focus(); }, 50);
   }
+
+  // Cmd+N: new note
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "n" && !e.shiftKey && !e.altKey) {
+        e.preventDefault();
+        newNote();
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   // Auto-save on change
   useEffect(() => {
