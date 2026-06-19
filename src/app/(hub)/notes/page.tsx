@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "@/lib/db";
 import type { Note, Project } from "@/types";
-import { Plus, Search, FileText, Eye, Edit3, Trash2, X, Hash, Link, FolderKanban, ChevronDown } from "lucide-react";
+import { Plus, Search, FileText, Eye, Edit3, Trash2, X, Hash, Link, FolderKanban, ChevronDown, Copy, Check } from "lucide-react";
 import { useLang } from "@/lib/lang-context";
 
 function stripMarkdown(text: string): string {
@@ -115,6 +115,7 @@ export default function NotesPage() {
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
   const [savedFlash, setSavedFlash] = useState(false);
+  const [copied, setCopied] = useState(false);
   const { t } = useLang();
   const nt = t.notes;
 
@@ -384,6 +385,18 @@ export default function NotesPage() {
                   {wordCount.words}w · {wordCount.chars}c
                 </span>
               )}
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(content).then(() => {
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 1500);
+                  });
+                }}
+                className="p-1.5 rounded-md text-slate-700 hover:text-blue-400 hover:bg-blue-500/10 transition-colors"
+                title="複製內容"
+              >
+                {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+              </button>
               <button
                 onClick={deleteNote}
                 className="p-1.5 rounded-md text-slate-700 hover:text-red-400 hover:bg-red-500/10 transition-colors"
