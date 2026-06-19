@@ -257,10 +257,10 @@ export default function NotesPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
               <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">{nt.panel}</span>
-              {search && filtered.length > 0 && (
+              {(search || filterProject) && filtered.length > 0 && (
                 <span className="text-xs text-blue-400/70 bg-blue-500/10 rounded-full px-1.5 py-0.5 leading-none">{filtered.length}</span>
               )}
-              {!search && (notes?.length ?? 0) > 0 && (
+              {!search && !filterProject && (notes?.length ?? 0) > 0 && (
                 <span className="text-xs text-slate-600 tabular-nums">{notes?.length}</span>
               )}
             </div>
