@@ -110,6 +110,7 @@ export default function NotesPage() {
   const [tagInput, setTagInput] = useState("");
   const [projectId, setProjectId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [filterProject, setFilterProject] = useState<string>(""); // "" = all
   const [mode, setMode] = useState<"edit" | "preview">("edit");
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
@@ -172,6 +173,7 @@ export default function NotesPage() {
   }
 
   const filtered = (notes ?? []).filter((n) => {
+    if (filterProject && n.projectId !== filterProject) return false;
     if (!search) return true;
     const q = search.toLowerCase();
     return (
@@ -267,6 +269,23 @@ export default function NotesPage() {
               className="w-full h-7 pl-7 pr-3 rounded-md bg-white/5 border border-white/10 text-slate-300 placeholder:text-slate-700 text-xs outline-none focus:border-blue-500/40 transition-colors"
             />
           </div>
+          {(projects ?? []).filter((p) => p.status === "active").length > 0 && (
+            <div className="relative">
+              <FolderKanban className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-600 pointer-events-none" />
+              <select
+                value={filterProject}
+                onChange={(e) => setFilterProject(e.target.value)}
+                className="w-full h-7 pl-7 pr-6 rounded-md bg-white/5 border border-white/10 text-xs outline-none appearance-none transition-colors cursor-pointer"
+                style={{ color: filterProject ? "#94a3b8" : "#475569" }}
+              >
+                <option value="" style={{ background: "#1e293b" }}>所有項目</option>
+                {(projects ?? []).filter((p) => p.status === "active").map((p) => (
+                  <option key={p.id} value={p.id} style={{ background: "#1e293b" }}>{p.title}</option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-slate-600 pointer-events-none" />
+            </div>
+          )}
         </div>
 
         <div className="flex-1 overflow-y-auto py-1">
@@ -274,9 +293,9 @@ export default function NotesPage() {
             <div className="text-center py-10">
               <FileText className="w-8 h-8 text-slate-700 mx-auto mb-2" />
               <p className="text-slate-700 text-xs">
-                {search ? nt.noResults : nt.empty}
+                {search || filterProject ? nt.noResults : nt.empty}
               </p>
-              {!search && (
+              {!search && !filterProject && (
                 <button onClick={newNote} className="mt-2 text-xs text-blue-500/60 hover:text-blue-400 transition-colors">
                   {nt.createOne}
                 </button>
