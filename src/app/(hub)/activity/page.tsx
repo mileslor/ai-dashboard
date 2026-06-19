@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
+import { useLiveQuery } from "dexie-react-hooks";
+import { db } from "@/lib/db";
 import { Plus, X, Zap as ActivityIcon, Clock, FolderKanban, RefreshCw, Search } from "lucide-react";
 
 interface ActivityEntry {
@@ -19,31 +21,14 @@ const AI_LABELS: Record<string, { name: string; color: string }> = {
   user: { name: "User",     color: "text-slate-400" },
 };
 
-const PROJECT_COLORS: Record<string, string> = {
-  "seed-thyc_system":      "#22c55e",
-  "seed-ai-dashboard":     "#8b5cf6",
-  "seed-karaqueue":        "#a855f7",
-  "seed-pilot":            "#3b82f6",
-  "seed-visapath":         "#f59e0b",
-  "seed-token-monitor":    "#06b6d4",
-  "seed-milestone":        "#0ea5e9",
-  "seed-youtube-lofi":     "#6366f1",
-  "seed-nintendo-research":"#ef4444",
-};
-
-const PROJECT_NAMES: Record<string, string> = {
-  "seed-thyc_system":      "THYC CRM",
-  "seed-ai-dashboard":     "AI Dashboard",
-  "seed-karaqueue":        "KaraQueue",
-  "seed-pilot":            "PilotLog",
-  "seed-visapath":         "VisaPath",
-  "seed-token-monitor":    "Token Monitor",
-  "seed-milestone":        "Milestone 網站",
-  "seed-youtube-lofi":     "YouTube Lo-Fi",
-  "seed-nintendo-research":"Nintendo 研究",
-};
-
 export default function ActivityPage() {
+  const projects = useLiveQuery(() => db.projects.toArray(), []);
+  const projectMap = useMemo(() => {
+    const m = new Map<string, { title: string; color: string }>();
+    (projects ?? []).forEach((p) => m.set(p.id, { title: p.title, color: p.color }));
+    return m;
+  }, [projects]);
+
   const [activities, setActivities] = useState<ActivityEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterProject, setFilterProject] = useState("");
@@ -173,8 +158,9 @@ export default function ActivityPage() {
             全部項目
           </button>
           {usedProjects.map((pid) => {
-            const color = PROJECT_COLORS[pid] ?? "#888";
-            const name = PROJECT_NAMES[pid] ?? pid;
+            const proj = projectMap.get(pid);
+            const color = proj?.color ?? "#888";
+            const name = proj?.title ?? pid;
             const active = filterProject === pid;
             return (
               <button key={pid} onClick={() => setFilterProject(active ? "" : pid)}
@@ -234,8 +220,9 @@ export default function ActivityPage() {
         {displayed.map((activity) => {
           const label = AI_LABELS[activity.aiId] ?? { name: activity.aiId, color: "text-slate-400" };
           const showAi = activity.aiId !== "user";
-          const color = activity.projectId ? (PROJECT_COLORS[activity.projectId] ?? "#888") : null;
-          const projName = activity.projectId ? (PROJECT_NAMES[activity.projectId] ?? activity.projectId) : null;
+          const proj = activity.projectId ? projectMap.get(activity.projectId) : null;
+          const color = proj?.color ?? (activity.projectId ? "#888" : null);
+          const projName = proj?.title ?? activity.projectId ?? null;
 
           return (
             <div key={activity.id} className="rounded-xl border border-white/8 bg-white/4 p-3 flex items-start gap-3 hover:border-white/16 transition-colors">
@@ -302,8 +289,8 @@ export default function ActivityPage() {
                 <select value={newProjectId} onChange={(e) => setNewProjectId(e.target.value)}
                   className="w-full h-10 rounded-lg bg-white/10 border border-white/20 text-white text-sm px-3 outline-none focus:border-amber-500/50 transition-colors">
                   <option value="">無</option>
-                  {Object.entries(PROJECT_NAMES).map(([id, name]) => (
-                    <option key={id} value={id}>{name}</option>
+                  {(projects ?? []).map((p) => (
+                    <option key={p.id} value={p.id}>{p.title}</option>
                   ))}
                 </select>
               </div>
