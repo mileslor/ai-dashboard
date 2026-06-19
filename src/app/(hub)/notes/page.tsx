@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "@/lib/db";
 import type { Note, Project } from "@/types";
-import { Plus, Search, FileText, Eye, Edit3, Trash2, X, Hash, Link, FolderKanban, ChevronDown, Copy, Check } from "lucide-react";
+import { Plus, Search, FileText, Eye, Edit3, Trash2, X, Hash, Link, FolderKanban, ChevronDown, Copy, Check, ArrowUpDown } from "lucide-react";
 import { useLang } from "@/lib/lang-context";
 
 function stripMarkdown(text: string): string {
@@ -111,6 +111,7 @@ export default function NotesPage() {
   const [projectId, setProjectId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [filterProject, setFilterProject] = useState<string>(""); // "" = all
+  const [sortBy, setSortBy] = useState<"updatedAt" | "createdAt" | "title">("updatedAt");
   const [mode, setMode] = useState<"edit" | "preview">("edit");
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
@@ -119,7 +120,11 @@ export default function NotesPage() {
   const { t } = useLang();
   const nt = t.notes;
 
-  const notes = useLiveQuery(() => db.notes.orderBy("updatedAt").reverse().toArray(), []);
+  const notes = useLiveQuery(() => {
+    if (sortBy === "title") return db.notes.orderBy("title").toArray();
+    if (sortBy === "createdAt") return db.notes.orderBy("createdAt").reverse().toArray();
+    return db.notes.orderBy("updatedAt").reverse().toArray();
+  }, [sortBy]);
   const projects = useLiveQuery(() => db.projects.orderBy("title").toArray(), []) as Project[] | undefined;
 
   const noteTitles = useMemo(() => {
@@ -264,14 +269,26 @@ export default function NotesPage() {
               {!search && !filterProject && (notes?.length ?? 0) > 0 && (
                 <span className="text-xs text-slate-600 tabular-nums">{notes?.length}</span>
               )}
+              {sortBy !== "updatedAt" && (
+                <span className="text-xs text-blue-400/60 font-mono">{sortBy === "createdAt" ? "C↓" : "AZ"}</span>
+              )}
             </div>
-            <button
-              onClick={newNote}
-              className="w-6 h-6 rounded-md hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
-              title={nt.newNote}
-            >
-              <Plus className="w-3.5 h-3.5" />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setSortBy((s) => s === "updatedAt" ? "createdAt" : s === "createdAt" ? "title" : "updatedAt")}
+                title={sortBy === "updatedAt" ? "排序：最近更新" : sortBy === "createdAt" ? "排序：建立時間" : "排序：標題 A-Z"}
+                className={`w-6 h-6 rounded-md hover:bg-white/10 flex items-center justify-center transition-colors ${sortBy !== "updatedAt" ? "text-blue-400" : "text-slate-500 hover:text-white"}`}
+              >
+                <ArrowUpDown className="w-3 h-3" />
+              </button>
+              <button
+                onClick={newNote}
+                className="w-6 h-6 rounded-md hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+                title={nt.newNote}
+              >
+                <Plus className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-600" />
