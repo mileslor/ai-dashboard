@@ -300,7 +300,7 @@ export default function ProjectsPage() {
                     <div className="flex items-center gap-2 mt-2 text-xs text-slate-700">
                       <span>{n.date}</span>
                       <span>·</span>
-                      <span>{Math.round(n.contentLength / 1000)}k chars</span>
+                      <span>{n.contentLength >= 1000 ? `${Math.round(n.contentLength / 1000)}k chars` : `${n.contentLength} chars`}</span>
                       {n.tags.map((tag) => (
                         <span key={tag} className="bg-white/6 px-1.5 py-0.5 rounded text-slate-600">#{tag}</span>
                       ))}
