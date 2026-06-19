@@ -459,6 +459,20 @@ export default function NotesPage() {
                 <textarea
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Tab") {
+                      e.preventDefault();
+                      const el = e.currentTarget;
+                      const start = el.selectionStart;
+                      const end = el.selectionEnd;
+                      const next = content.slice(0, start) + "  " + content.slice(end);
+                      setContent(next);
+                      requestAnimationFrame(() => {
+                        el.selectionStart = start + 2;
+                        el.selectionEnd = start + 2;
+                      });
+                    }
+                  }}
                   placeholder={nt.placeholder}
                   className="w-full h-full px-8 py-5 bg-transparent text-slate-300 placeholder:text-slate-700 text-sm leading-7 outline-none resize-none font-mono"
                 />
