@@ -48,6 +48,10 @@ export default function HubLayout({ children }: { children: React.ReactNode }) {
     return db.notes.where("updatedAt").aboveOrEqual(start.getTime()).count();
   }, []) ?? 0;
 
+  const activeProjectsCount = useLiveQuery(() =>
+    db.projects.where("status").equals("active").count()
+  , []) ?? 0;
+
   useEffect(() => {
     function fetchCounts() {
       fetch("/api/decisions")
@@ -138,7 +142,12 @@ export default function HubLayout({ children }: { children: React.ReactNode }) {
                       {todayNotesCount}
                     </span>
                   )}
-                  {isActive && !isDecisions && href !== "/messages" && href !== "/automation" && href !== "/notes" && <ChevronRight className="w-3 h-3 opacity-60 flex-shrink-0" />}
+                  {href === "/projects" && activeProjectsCount > 0 && (
+                    <span className="text-xs bg-emerald-500/20 text-emerald-400/80 border border-emerald-500/20 px-1.5 py-0.5 rounded-full flex-shrink-0 leading-none">
+                      {activeProjectsCount}
+                    </span>
+                  )}
+                  {isActive && !isDecisions && href !== "/messages" && href !== "/automation" && href !== "/notes" && href !== "/projects" && <ChevronRight className="w-3 h-3 opacity-60 flex-shrink-0" />}
                 </div>
               </Link>
             );
