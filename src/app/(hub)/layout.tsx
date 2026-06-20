@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Brain, Users, FolderKanban, Zap, MessageSquare, Settings, ChevronRight, Sparkles, FileText, Cog, Target } from "lucide-react";
 import { useLang } from "@/lib/lang-context";
+import { useLiveQuery } from "dexie-react-hooks";
+import { db } from "@/lib/db";
 
 const NAV_ITEMS = [
   { href: "/decisions",  key: "decisions"  as const, emoji: "🎯", color: "red" },
@@ -40,6 +42,11 @@ export default function HubLayout({ children }: { children: React.ReactNode }) {
   const [decisionCount, setDecisionCount] = useState(0);
   const [msgCount, setMsgCount] = useState(0);
   const [automationErrors, setAutomationErrors] = useState(0);
+
+  const todayNotesCount = useLiveQuery(() => {
+    const start = new Date(); start.setHours(0, 0, 0, 0);
+    return db.notes.where("updatedAt").aboveOrEqual(start.getTime()).count();
+  }, []) ?? 0;
 
   useEffect(() => {
     function fetchCounts() {
@@ -126,7 +133,12 @@ export default function HubLayout({ children }: { children: React.ReactNode }) {
                       {automationErrors}
                     </span>
                   )}
-                  {isActive && !isDecisions && href !== "/messages" && href !== "/automation" && <ChevronRight className="w-3 h-3 opacity-60 flex-shrink-0" />}
+                  {href === "/notes" && todayNotesCount > 0 && (
+                    <span className="text-xs bg-blue-500/20 text-blue-400/80 border border-blue-500/20 px-1.5 py-0.5 rounded-full flex-shrink-0 leading-none">
+                      {todayNotesCount}
+                    </span>
+                  )}
+                  {isActive && !isDecisions && href !== "/messages" && href !== "/automation" && href !== "/notes" && <ChevronRight className="w-3 h-3 opacity-60 flex-shrink-0" />}
                 </div>
               </Link>
             );
