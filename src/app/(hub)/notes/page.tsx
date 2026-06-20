@@ -231,6 +231,21 @@ export default function NotesPage() {
     return () => window.removeEventListener("keydown", onKey);
   }, [selectedId]);
 
+  // Cmd+S: force save immediately
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "s" && !e.shiftKey && !e.altKey && selectedId) {
+        e.preventDefault();
+        if (saveTimer.current) clearTimeout(saveTimer.current);
+        db.notes.update(selectedId, { title: title || "Untitled", content, tags, projectId: projectId ?? undefined, updatedAt: Date.now() });
+        setSavedFlash(true);
+        setTimeout(() => setSavedFlash(false), 800);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [selectedId, title, content, tags, projectId]);
+
   // Auto-save on change
   useEffect(() => {
     if (!selectedId) return;
