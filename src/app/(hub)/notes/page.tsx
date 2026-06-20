@@ -241,6 +241,7 @@ export default function NotesPage() {
 
   async function deleteNote() {
     if (!selectedId) return;
+    if (!window.confirm(`刪除「${title || "Untitled"}」？此操作不可撤銷。`)) return;
     await db.notes.delete(selectedId);
     setSelectedId(null);
     setTitle(""); setContent(""); setTags([]);
@@ -417,7 +418,7 @@ export default function NotesPage() {
               <button
                 onClick={deleteNote}
                 className="p-1.5 rounded-md text-slate-700 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                title="Delete note"
+                title="刪除筆記"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
