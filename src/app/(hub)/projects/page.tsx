@@ -116,7 +116,8 @@ export default function ProjectsPage() {
     setTimeout(() => setSelectedId(id), 80);
   }
 
-  async function handleDelete(id: string) {
+  async function handleDelete(id: string, title: string) {
+    if (!window.confirm(`刪除「${title || "Untitled"}」項目？此操作不可撤銷。`)) return;
     await db.projects.delete(id);
     if (selectedId === id) setSelectedId(null);
     load();
@@ -207,7 +208,7 @@ export default function ProjectsPage() {
                 onBlur={(e) => updateProject(selected.id, { title: e.target.value }).then(load)}
                 className="bg-transparent text-xl font-bold text-white outline-none hover:bg-white/5 focus:bg-white/5 rounded px-1 -ml-1 transition-colors" />
             </div>
-            <button onClick={() => handleDelete(selected.id)}
+            <button onClick={() => handleDelete(selected.id, selected.title)}
               className="p-1.5 rounded-md text-slate-700 hover:text-red-400 hover:bg-red-500/10 transition-colors">
               <Trash2 className="w-3.5 h-3.5" />
             </button>
