@@ -219,6 +219,18 @@ export default function NotesPage() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  // Cmd+E: toggle edit/preview
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "e" && !e.shiftKey && !e.altKey && selectedId) {
+        e.preventDefault();
+        setMode((m) => (m === "edit" ? "preview" : "edit"));
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [selectedId]);
+
   // Auto-save on change
   useEffect(() => {
     if (!selectedId) return;
@@ -379,6 +391,7 @@ export default function NotesPage() {
             <div className="flex items-center gap-1 bg-white/5 rounded-lg p-0.5">
               <button
                 onClick={() => setMode("edit")}
+                title="Edit (⌘E)"
                 className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 ${
                   mode === "edit" ? "bg-white/10 text-white" : "text-slate-500 hover:text-slate-300"
                 }`}
@@ -387,6 +400,7 @@ export default function NotesPage() {
               </button>
               <button
                 onClick={() => setMode("preview")}
+                title="Preview (⌘E)"
                 className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 ${
                   mode === "preview" ? "bg-white/10 text-white" : "text-slate-500 hover:text-slate-300"
                 }`}
