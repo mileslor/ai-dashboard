@@ -122,7 +122,17 @@ export default function ActivityPage() {
         <div className="flex items-center justify-between mb-3">
           <div>
             <h2 className="text-xl font-bold text-white">Activity Feed</h2>
-            <p className="text-slate-400 text-sm mt-0.5">{displayed.length} / {activities.length} 條記錄 · live</p>
+            <div className="flex items-center gap-2 mt-0.5">
+              <p className="text-slate-400 text-sm">{displayed.length} / {activities.length} 條記錄 · live</p>
+              {(filterProject || filterAi || filterTime || searchQuery) && (
+                <button
+                  onClick={() => { setFilterProject(""); setFilterAi(""); setFilterTime(""); setSearchQuery(""); }}
+                  className="text-xs text-amber-500 hover:text-amber-300 transition-colors flex items-center gap-0.5"
+                >
+                  <X className="w-3 h-3" /> 清除篩選
+                </button>
+              )}
+            </div>
           </div>
           <div className="flex gap-2">
             <button onClick={load} disabled={loading}
