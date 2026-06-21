@@ -75,3 +75,7 @@ button {
 .md-preview .wikilink { color: #818cf8; background: rgba(99,102,241,0.1); border-radius: 3px; padding: 0 3px; cursor: pointer; border-bottom: 1px solid rgba(99,102,241,0.3); transition: background 0.15s; }
 .md-preview .wikilink:hover { background: rgba(99,102,241,0.22); color: #a5b4fc; }
 .md-preview .wikilink.broken { color: #64748b; background: rgba(100,116,139,0.1); border-bottom-color: rgba(100,116,139,0.3); cursor: default; }
+.md-preview table { width: 100%; border-collapse: collapse; margin: 0.75rem 0; font-size: 0.875rem; }
+.md-preview th { background: rgba(255,255,255,0.06); color: #e2e8f0; font-weight: 600; text-align: left; padding: 0.5rem 0.75rem; border: 1px solid rgba(255,255,255,0.1); }
+.md-preview td { color: #cbd5e1; padding: 0.5rem 0.75rem; border: 1px solid rgba(255,255,255,0.07); }
+.md-preview tr:nth-child(even) td { background: rgba(255,255,255,0.02); }

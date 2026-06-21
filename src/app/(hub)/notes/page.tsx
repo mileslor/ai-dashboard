@@ -91,6 +91,20 @@ function renderMarkdown(raw: string, noteTitles?: Set<string>): string {
       }
       parts.push(`<ol>${items.join("")}</ol>`);
       continue;
+    } else if (lines[i].trimStart().startsWith("|") && i + 1 < lines.length && /^\|[-| :]+\|/.test(lines[i + 1])) {
+      const parseRow = (row: string) =>
+        row.split("|").slice(1, -1).map((c) => c.trim());
+      const headers = parseRow(lines[i]);
+      i += 2; // skip header + separator
+      const rows: string[][] = [];
+      while (i < lines.length && lines[i].trimStart().startsWith("|")) {
+        rows.push(parseRow(lines[i]));
+        i++;
+      }
+      const thead = `<tr>${headers.map((h) => `<th>${inline(h)}</th>`).join("")}</tr>`;
+      const tbody = rows.map((r) => `<tr>${r.map((c) => `<td>${inline(c)}</td>`).join("")}</tr>`).join("");
+      parts.push(`<table><thead>${thead}</thead><tbody>${tbody}</tbody></table>`);
+      continue;
     } else if (lines[i].trim() === "") {
       // skip empty lines (paragraphs handled below)
     } else {
