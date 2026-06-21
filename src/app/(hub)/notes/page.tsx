@@ -32,6 +32,11 @@ function renderMarkdown(raw: string, noteTitles?: Set<string>): string {
       .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
       .replace(/\*(.+?)\*/g, "<em>$1</em>")
       .replace(/`([^`]+)`/g, "<code>$1</code>")
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, text, href) => {
+        const url = href.trim();
+        if (!url.startsWith("http://") && !url.startsWith("https://") && !url.startsWith("mailto:")) return `[${text}](${href})`;
+        return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="md-link">${text}</a>`;
+      })
       .replace(/\[\[(.+?)\]\]/g, (_, title) => {
         const exists = !noteTitles || noteTitles.has(title.toLowerCase());
         return `<span class="wikilink${exists ? "" : " broken"}" data-title="${title}">${title}</span>`;
