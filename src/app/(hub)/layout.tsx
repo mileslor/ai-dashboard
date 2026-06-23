@@ -42,6 +42,7 @@ export default function HubLayout({ children }: { children: React.ReactNode }) {
   const [decisionCount, setDecisionCount] = useState(0);
   const [msgCount, setMsgCount] = useState(0);
   const [automationErrors, setAutomationErrors] = useState(0);
+  const [todayActivityCount, setTodayActivityCount] = useState(0);
 
   const todayNotesCount = useLiveQuery(() => {
     const start = new Date(); start.setHours(0, 0, 0, 0);
@@ -71,6 +72,10 @@ export default function HubLayout({ children }: { children: React.ReactNode }) {
           const errCount = (d.jobs ?? []).filter(jobHasError).length;
           setAutomationErrors(errCount);
         })
+        .catch(() => {});
+      fetch("/api/activities/count")
+        .then((r) => r.json())
+        .then((d) => setTodayActivityCount(d.count ?? 0))
         .catch(() => {});
     }
     fetchCounts();
@@ -147,7 +152,12 @@ export default function HubLayout({ children }: { children: React.ReactNode }) {
                       {activeProjectsCount}
                     </span>
                   )}
-                  {isActive && !isDecisions && href !== "/messages" && href !== "/automation" && href !== "/notes" && href !== "/projects" && <ChevronRight className="w-3 h-3 opacity-60 flex-shrink-0" />}
+                  {href === "/activity" && todayActivityCount > 0 && (
+                    <span className="text-xs bg-amber-500/20 text-amber-400/80 border border-amber-500/20 px-1.5 py-0.5 rounded-full flex-shrink-0 leading-none">
+                      {todayActivityCount}
+                    </span>
+                  )}
+                  {isActive && !isDecisions && href !== "/messages" && href !== "/automation" && href !== "/notes" && href !== "/projects" && href !== "/activity" && <ChevronRight className="w-3 h-3 opacity-60 flex-shrink-0" />}
                 </div>
               </Link>
             );
