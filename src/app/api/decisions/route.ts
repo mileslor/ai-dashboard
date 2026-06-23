@@ -154,7 +154,8 @@ function parseStatePending(content: string): DecisionItem[] {
   const pendingRaw = content.match(/## ⏳ 等待處理 · Pending\n\n([\s\S]*?)(?=\n---)/)?.[1] ?? "";
   return pendingRaw
     .split("\n")
-    .map((l) => l.replace(/^- \[[ x]\] /, "").trim())
+    .filter((l) => /^- \[ \]/.test(l)) // only unchecked items
+    .map((l) => l.replace(/^- \[ \] /, "").trim())
     .filter(Boolean)
     .map((item, i) => ({ id: `state-pending-${i}`, type: "pending" as const, severity: "low" as const, title: item.slice(0, 80), detail: item, source: "state" as const }));
 }
