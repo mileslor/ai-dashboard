@@ -94,13 +94,17 @@ function parseThycMilestones(content: string): ActivityEntry[] {
 
 function parseChannelMd(content: string): ActivityEntry[] {
   const acts: ActivityEntry[] = [];
-  for (const m of content.matchAll(/\[(mx|ce|user)\s+(\d{4}-\d{2}-\d{2})[^\]]*\]:\s*(.+)/g)) {
+  for (const m of content.matchAll(/\[(mx|ce|user)\s+(\d{4}-\d{2}-\d{2})(?:\s+(\d{2}:\d{2}))?[^\]]*\]:\s*(.+)/g)) {
     const sender = m[1];
-    const ts = new Date(m[2]).getTime();
-    const firstLine = m[3].trim().slice(0, 120);
+    const dateStr = m[2];
+    const timeStr = m[3];
+    const ts = timeStr
+      ? new Date(`${dateStr}T${timeStr}:00`).getTime()
+      : new Date(dateStr).getTime();
+    const firstLine = m[4].trim().slice(0, 120);
     if (!firstLine) continue;
     acts.push({
-      id: `channel-${ts}-${sender}-${firstLine.slice(0, 15)}`,
+      id: `channel-${ts}-${sender}-${firstLine.slice(0, 20)}`,
       aiId: sender === "mx" ? "mx" : sender === "ce" ? "ce" : "user",
       projectId: null,
       action: firstLine,
