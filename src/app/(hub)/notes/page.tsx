@@ -31,6 +31,7 @@ function renderMarkdown(raw: string, noteTitles?: Set<string>): string {
     return esc(s)
       .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
       .replace(/\*(.+?)\*/g, "<em>$1</em>")
+      .replace(/~~(.+?)~~/g, "<s>$1</s>")
       .replace(/`([^`]+)`/g, "<code>$1</code>")
       .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, text, href) => {
         const url = href.trim();
