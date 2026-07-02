@@ -43,6 +43,7 @@ export default function HubLayout({ children }: { children: React.ReactNode }) {
   const [msgCount, setMsgCount] = useState(0);
   const [automationErrors, setAutomationErrors] = useState(0);
   const [todayActivityCount, setTodayActivityCount] = useState(0);
+  const [tokenPct, setTokenPct] = useState<number | null>(null);
 
   const todayNotesCount = useLiveQuery(() => {
     const start = new Date(); start.setHours(0, 0, 0, 0);
@@ -76,6 +77,10 @@ export default function HubLayout({ children }: { children: React.ReactNode }) {
       fetch("/api/activities/count")
         .then((r) => r.json())
         .then((d) => setTodayActivityCount(d.count ?? 0))
+        .catch(() => {});
+      fetch("/api/claude-usage")
+        .then((r) => r.json())
+        .then((d) => setTokenPct(d.five_hour_utilization != null ? d.five_hour_utilization * 100 : null))
         .catch(() => {});
     }
     fetchCounts();
@@ -157,7 +162,12 @@ export default function HubLayout({ children }: { children: React.ReactNode }) {
                       {todayActivityCount}
                     </span>
                   )}
-                  {isActive && !isDecisions && href !== "/messages" && href !== "/automation" && href !== "/notes" && href !== "/projects" && href !== "/activity" && <ChevronRight className="w-3 h-3 opacity-60 flex-shrink-0" />}
+                  {href === "/tokens" && tokenPct != null && tokenPct >= 60 && (
+                    <span className={`text-xs px-1.5 py-0.5 rounded-full flex-shrink-0 leading-none border ${tokenPct >= 80 ? "bg-red-500/25 text-red-400 border-red-500/30" : "bg-amber-500/20 text-amber-400/80 border-amber-500/20"}`}>
+                      {Math.round(tokenPct)}%
+                    </span>
+                  )}
+                  {isActive && !isDecisions && href !== "/messages" && href !== "/automation" && href !== "/notes" && href !== "/projects" && href !== "/activity" && href !== "/tokens" && <ChevronRight className="w-3 h-3 opacity-60 flex-shrink-0" />}
                 </div>
               </Link>
             );
