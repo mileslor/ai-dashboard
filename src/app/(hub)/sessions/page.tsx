@@ -45,7 +45,11 @@ export default function SessionsPage() {
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+    const t = setInterval(() => load(), 60000);
+    return () => clearInterval(t);
+  }, [load]);
 
   function toggleExpand(date: string) {
     setExpanded((prev) => {
