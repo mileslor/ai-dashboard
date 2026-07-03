@@ -118,12 +118,16 @@ function parseChannel(content: string): DecisionItem[] {
   const mxTaskRe = /^\[mx (\d{4}-\d{2}-\d{2}) (\d{2}:\d{2})\]:\s*(.*)/;
   const ceResolvedRe = /^\[ce (\d{4}-\d{2}-\d{2}) (\d{2}:\d{2})\]:\s*✅/;
   const ceWarningRe = /^\[ce (\d{4}-\d{2}-\d{2}) (\d{2}:\d{2})\]:\s*⚠️\s*(.*)/;
+  const mxBlockedRe = /^\[mx (\d{4}-\d{2}-\d{2}) (\d{2}:\d{2})\]:\s*([⛔⏸️])\s*(.*)/u;
 
   const resolvedAfter: number[] = [];
   for (const line of lines) {
     const m = line.match(ceResolvedRe);
     if (m) resolvedAfter.push(new Date(`${m[1]}T${m[2]}:00`).getTime());
   }
+
+  // Track which blocked timestamps we've already added (keep only latest per day)
+  const blockedByDay = new Map<string, { ts: number; idx: number }>();
 
   const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
   for (let i = 0; i < lines.length; i++) {
@@ -144,7 +148,36 @@ function parseChannel(content: string): DecisionItem[] {
       if (ts < cutoff) continue;
       items.push({ id: `channel-warn-${ts}`, type: "warning", severity: "high", title: `Ce 警告 · ${warn[1]} ${warn[2]}`, detail: warn[3].slice(0, 120), timestamp: ts, source: "channel" });
     }
+    const blocked = line.match(mxBlockedRe);
+    if (blocked) {
+      const ts = new Date(`${blocked[1]}T${blocked[2]}:00`).getTime();
+      if (ts < cutoff) continue;
+      const resolved = resolvedAfter.some((r) => r > ts);
+      if (!resolved) {
+        // Keep only the latest blocked message per calendar day to avoid spam
+        const day = blocked[1];
+        const existing = blockedByDay.get(day);
+        if (!existing || ts > existing.ts) {
+          blockedByDay.set(day, { ts, idx: i });
+        }
+      }
+    }
   }
+
+  for (const [, { ts, idx }] of blockedByDay) {
+    const detail = lines.slice(idx, idx + 5).join(" ").replace(/^\[mx[^\]]+\]:\s*/, "").slice(0, 200);
+    const datePart = new Date(ts).toISOString().slice(0, 10);
+    items.push({
+      id: `channel-blocked-${ts}`,
+      type: "pending",
+      severity: "medium",
+      title: `Mx 被阻擋 · 需要 Miles 處理 (${datePart})`,
+      detail: detail.trim(),
+      timestamp: ts,
+      source: "channel",
+    });
+  }
+
   return items;
 }
 
