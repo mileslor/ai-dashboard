@@ -209,6 +209,21 @@ export async function GET() {
     if (fs.existsSync(STATE_FILE)) {
       const state = fs.readFileSync(STATE_FILE, "utf8");
       items.push(...parseStatePending(state));
+
+      const lastUpdated = state.match(/最後更新：(\d{4}-\d{2}-\d{2})/)?.[1];
+      if (lastUpdated) {
+        const daysSince = (Date.now() - new Date(lastUpdated).getTime()) / 86400000;
+        if (daysSince > 5) {
+          items.push({
+            id: `state-stale-${lastUpdated}`,
+            type: "warning",
+            severity: "low",
+            title: `current-state.md 已 ${Math.round(daysSince)} 日未更新`,
+            detail: `最後更新：${lastUpdated}。建議更新工作狀態（Active Now、Projects 進度、Recent Decisions）。`,
+            source: "state",
+          });
+        }
+      }
     }
   } catch {}
 
